@@ -2,6 +2,7 @@
 #include <gmock/gmock.h>
 #include "../include/client.hpp"
 #include "test_calculator.hpp"
+#include "test_client.hpp"
 
 using ::testing::InSequence;
 
@@ -117,4 +118,90 @@ TEST(ClientTest, fibReturnsTest)
   
   //EXPECT_GT(result, 0);
   EXPECT_EQ(result, 2);
+}
+
+TEST(ClientTest, factorialTest)
+{
+  MockCalculator mockCalc;
+
+  EXPECT_CALL(mockCalc, multiply(::testing::_, ::testing::_))
+     .Times(::testing::Exactly(5))
+     .WillRepeatedly([](int a, int b){ return a*b; });
+
+  Client client(&mockCalc);
+  int result= client.factorial(5);
+
+  EXPECT_EQ(result, 120); 
+}
+
+// Let the mock fallback to real recurssive behaviour.
+TEST(ClientTest, factTest)
+{
+  MockClient mockClient;
+
+  //EXPECT_CALL(mockClient, fact(5))
+     //.Times(::testing::Exactly(1))
+     //.WillOnce(::testing::Return(120));
+
+  //EXPECT_CALL(mockClient, fact(4))
+     //.Times(::testing::Exactly(1))
+     //.WillOnce(::testing::Return(24));
+
+  //EXPECT_CALL(mockClient, fact(3))
+     //.Times(::testing::Exactly(1))
+     //.WillOnce(::testing::Return(6));
+
+  //EXPECT_CALL(mockClient, fact(2))
+     //.Times(::testing::Exactly(1))
+     //.WillOnce(::testing::Return(2));
+
+  //EXPECT_CALL(mockClient, fact(1))
+     //.Times(::testing::Exactly(1))
+     //.WillOnce(::testing::Return(1)); 
+
+  // Allow real recurssive behaviour by default.
+  ON_CALL(mockClient, fact(::testing::_))
+      .WillByDefault(::testing::Invoke([&mockClient](int n) {
+          if( n==0 || n==1 )
+	    return 1;
+	  return n* mockClient.fact(n-1);
+      }));
+
+  EXPECT_CALL(mockClient, fact(::testing::_))
+     .Times(::testing::AtLeast(1));
+
+  Client client(&mockClient);
+  int result= client.fact(5);
+
+  EXPECT_EQ(result, 120);
+
+  //EXPECT_CALL(mockClient, fact(::testing::_))
+  //   .Times(::testing::Exactly(5))
+  //   .WillRepeatedly(::testing::Return([](int n){ return n; }));
+
+  //Client client;
+  //int result= client.fact(5);
+
+  //EXPECT_EQ(result, 120);
+}
+
+// test only the top-level call.
+TEST(ClientTest, factTopLvlTest)
+{
+   MockClient mockClient;
+
+   // fact(5) is real call to the fact() in Client class.
+   // whereas fact(4) is intercepted by the google mock.
+   // But the result will be calculated as per the method logic.
+   // fact(3), fact(2) and fact(1) are neither mocked nor called.
+   // result= fact(5)->5 * fact(4)->24 = 120
+   EXPECT_CALL(mockClient, fact(4))
+      .Times(1)
+      .WillOnce(::testing::Return(24));
+
+   Client client(&mockClient);
+
+   int result= client.fact(5);
+
+   EXPECT_EQ(result, 120);
 }
