@@ -40,4 +40,50 @@ class Client
          int res2 = calc->calculateSumUntil(res1); 
          return res2;
       }
-};
+
+      // method similar to fib. But it finds the 
+      virtual void not_fib(int n)
+      {
+	 int fib0= 0, fib1= 1;
+	 int i= 1;
+	 int fib= 0;
+
+         while(i<=n)
+	 {
+	   fib= calc->add(fib0,fib1);
+	   std::cout<<fib0<<" "<<fib1<<" "<<fib<<std::endl;
+	   fib0= fib1;
+	   fib1= calc->add(fib,fib1); 
+	   i++;
+	 }
+      }
+
+      virtual int fib_returns(int n)
+      {
+         int fib0= 0, fib1= 1;
+         int i= 1;
+         int fib= 0;
+
+	 if(n==1)
+	 {
+	   return 0;
+	 }
+	 
+	 if(n==2)
+	 {
+	   return 1;
+	 }
+
+         while(i<=n-2)
+         {
+	   fib= calc->add(fib0,fib1);
+	   std::cout<<fib0<<" "<<fib1<<" "<<fib<<std::endl;
+	   fib0= fib1;
+           fib1= fib;
+           i++;
+         }
+ 
+         return fib; 
+      }
+}
+;

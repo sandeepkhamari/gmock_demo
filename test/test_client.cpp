@@ -83,3 +83,38 @@ TEST(ClientTest, doSomeCalculationTest)
 
    EXPECT_EQ(result, 378);
 }
+
+TEST(ClientTest, notFibTest)
+{
+  MockCalculator mockCalc;
+
+  // In real, when the code runs, it calculates not_fib(5) as 5
+  // which is basically 6th number in the fib series {0, 1, 1, 2, 3, 5}
+  // As we dont expect any return, we return 1 always, 
+  // which is getting printed always as the real call was intercepted by
+  // GoogleMock framework and returns the set values.
+  EXPECT_CALL(mockCalc, add(::testing::_,::testing::_))
+     .Times(::testing::Exactly(2 * 5))  // since inside while(i<=n)
+     .WillRepeatedly(::testing::Return(1)); // dummy return 
+
+  Client client(&mockCalc);
+  client.not_fib(5);
+  // no result to expect or compare.
+}
+
+TEST(ClientTest, fibReturnsTest)
+{
+  MockCalculator mockCalc;
+
+  // Finding the 4th number in the fibonacci series: 
+  // {0, 1, 1, 2, 3, 5, 8, ......} which is 2.
+  EXPECT_CALL(mockCalc, add(::testing::_,::testing::_))
+     .Times(::testing::Exactly(2))  // (n-2) calls when n=4 
+     .WillRepeatedly([](int a, int b){ return a + b; }); // actual return
+
+  Client client(&mockCalc);
+  int result= client.fib_returns(4);
+  
+  //EXPECT_GT(result, 0);
+  EXPECT_EQ(result, 2);
+}
